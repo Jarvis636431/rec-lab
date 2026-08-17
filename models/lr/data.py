@@ -1,7 +1,7 @@
 """Synthetic exposure data for the first CTR experiment."""
 
 from dataclasses import dataclass
-from typing import Dict, Sequence, Tuple
+from typing import Dict, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -36,11 +36,17 @@ def _sigmoid(values: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(-values))
 
 
-def generate_exposures(samples: int, seed: int) -> Dict[str, np.ndarray]:
+def generate_exposures(
+    samples: int,
+    seed: int,
+    base_ctr: Optional[float] = None,
+) -> Dict[str, np.ndarray]:
     """Generate chronological impressions from a known click process."""
 
     if samples < 100:
         raise ValueError("samples must be at least 100")
+    if base_ctr is not None and not 0 < base_ctr < 1:
+        raise ValueError("base_ctr must be between 0 and 1")
 
     rng = np.random.default_rng(seed)
     user_sports = rng.binomial(1, 0.42, samples).astype(np.float32)
@@ -55,8 +61,15 @@ def generate_exposures(samples: int, seed: int) -> Dict[str, np.ndarray]:
 
     price_scale = np.log1p(price) - np.log1p(280)
     position_scale = (position - 1) / 9
+    # Keep the original intercept when base_ctr is omitted so existing
+    # experiments remain exactly reproducible. When configured, base_ctr is
+    # the click probability for a reference impression before feature effects.
+    intercept = -2.6
+    if base_ctr is not None:
+        intercept = float(np.log(base_ctr / (1.0 - base_ctr)))
+
     logits = (
-        -2.6
+        intercept
         + 0.35 * user_sports
         + 0.20 * item_sports
         + 1.55 * sports_match
@@ -83,10 +96,15 @@ def prepare_data(
     samples: int = 20_000,
     seed: int = 42,
     include_cross: bool = False,
+    base_ctr: Optional[float] = None,
 ) -> DataSplit:
     """Generate, time-split, and standardize features without leakage."""
 
-    exposures = generate_exposures(samples=samples, seed=seed)
+    exposures = generate_exposures(
+        samples=samples,
+        seed=seed,
+        base_ctr=base_ctr,
+    )
     feature_names: Sequence[str] = BASE_FEATURES
     if include_cross:
         feature_names = (*BASE_FEATURES, CROSS_FEATURE)

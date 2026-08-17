@@ -67,6 +67,16 @@ uv run python -m models.lr.train \
   --seed 42
 ```
 
+低 CTR 与准确率陷阱实验：
+
+```bash
+uv run python -m models.lr.train --base-ctr 0.005
+```
+
+`--base-ctr` 表示其他特征产生影响前，参考曝光的基础点击概率。省略该参数时继续使用原始截距 `-2.6`，因此原来的基线结果和运行命令保持不变。训练输出会同时报告模型指标与 `always-negative baseline`，用于观察低 CTR 下“全部预测为不点击”为什么能获得很高 Accuracy，却具有 0 Recall 和 0.5 AUC。
+
+配置了基础 CTR 的实验会写入独立目录，例如 `--base-ctr 0.005` 对应 `outputs/lr/baseline_base_ctr_0p005/`，不会覆盖原来的 `outputs/lr/baseline/`。
+
 结果保存在：
 
 ```text
@@ -127,4 +137,4 @@ outputs/lr/with_cross/
 
 ## 下一步
 
-逐段阅读训练循环，把 Batch、logits、BCE、反向传播、参数更新和评估指标与实际输出对应起来；随后进入 FM，让模型通过隐向量自动学习二阶特征交互，并与这组 LR 结果进行对照。
+先阅读 [类别不平衡与正则化补充笔记](IMBALANCE_AND_REGULARIZATION.md)，理解负采样、样本权重、概率修正、L1/L2 和 Early Stopping。然后逐段阅读训练循环，把 Batch、logits、BCE、反向传播、参数更新和评估指标与实际输出对应起来；随后进入 FM，让模型通过隐向量自动学习二阶特征交互，并与这组 LR 结果进行对照。

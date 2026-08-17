@@ -4,11 +4,18 @@ import argparse
 import json
 import random
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import torch
-from sklearn.metrics import log_loss, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score,
+    average_precision_score,
+    log_loss,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -24,6 +31,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--learning-rate", type=float, default=0.05)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--include-cross", action="store_true")
+    parser.add_argument(
+        "--base-ctr",
+        type=float,
+        default=None,
+        help=(
+            "reference-impression CTR before feature effects; "
+            "omit to preserve the original data generator"
+        ),
+    )
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/lr"))
     return parser.parse_args()
 
@@ -96,13 +112,37 @@ def expected_calibration_error(
 
 def evaluate(labels: np.ndarray, probabilities: np.ndarray) -> Dict[str, float]:
     clipped = np.clip(probabilities, 1e-7, 1 - 1e-7)
+    predictions = (probabilities >= 0.5).astype(np.float32)
     return {
         "auc": float(roc_auc_score(labels, probabilities)),
+        "pr_auc": float(average_precision_score(labels, probabilities)),
         "log_loss": float(log_loss(labels, clipped)),
         "ece": expected_calibration_error(labels, probabilities),
+        "accuracy": float(accuracy_score(labels, predictions)),
+        "precision": float(
+            precision_score(labels, predictions, zero_division=0)
+        ),
+        "recall": float(recall_score(labels, predictions, zero_division=0)),
         "predicted_ctr": float(probabilities.mean()),
         "observed_ctr": float(labels.mean()),
     }
+
+
+def evaluate_always_negative(labels: np.ndarray) -> Dict[str, float]:
+    """Evaluate the misleading majority-class baseline for low-CTR data."""
+
+    probabilities = np.zeros_like(labels, dtype=np.float32)
+    return evaluate(labels, probabilities)
+
+
+def experiment_name(include_cross: bool, base_ctr: Optional[float]) -> str:
+    """Build a stable output name without changing legacy experiment paths."""
+
+    name = "with_cross" if include_cross else "baseline"
+    if base_ctr is not None:
+        ctr_label = format(base_ctr, ".8g").replace(".", "p")
+        name = f"{name}_base_ctr_{ctr_label}"
+    return name
 
 
 def train(args: argparse.Namespace) -> None:
@@ -114,6 +154,7 @@ def train(args: argparse.Namespace) -> None:
         samples=args.samples,
         seed=args.seed,
         include_cross=args.include_cross,
+        base_ctr=args.base_ctr,
     )
     train_loader = make_loader(
         data.train_x,
@@ -174,6 +215,14 @@ def train(args: argparse.Namespace) -> None:
             "learning_rate": args.learning_rate,
             "seed": args.seed,
             "include_cross": args.include_cross,
+            "base_ctr": args.base_ctr,
+        }
+    )
+    always_negative_metrics = evaluate_always_negative(data.test_y)
+    metrics.update(
+        {
+            f"always_negative_{name}": value
+            for name, value in always_negative_metrics.items()
         }
     )
 
@@ -186,8 +235,10 @@ def train(args: argparse.Namespace) -> None:
         },
     }
 
-    experiment_name = "with_cross" if args.include_cross else "baseline"
-    output_dir = args.output_dir / experiment_name
+    output_dir = args.output_dir / experiment_name(
+        include_cross=args.include_cross,
+        base_ctr=args.base_ctr,
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
 
     (output_dir / "metrics.json").write_text(
@@ -210,8 +261,22 @@ def train(args: argparse.Namespace) -> None:
     )
 
     print("\ntest metrics")
-    for name in ("auc", "log_loss", "ece", "predicted_ctr", "observed_ctr"):
+    for name in (
+        "auc",
+        "pr_auc",
+        "log_loss",
+        "ece",
+        "accuracy",
+        "precision",
+        "recall",
+        "predicted_ctr",
+        "observed_ctr",
+    ):
         print(f"{name:>14}: {metrics[name]:.6f}")
+
+    print("\nalways-negative baseline")
+    for name in ("accuracy", "precision", "recall", "auc", "pr_auc"):
+        print(f"{name:>14}: {always_negative_metrics[name]:.6f}")
 
     print("\nlearned standardized-feature weights")
     for name, weight in learned_parameters["weights"].items():

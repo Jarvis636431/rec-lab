@@ -10,6 +10,8 @@ LR → FM → DeepFM → DCN → Two Tower → DIN → ESMM → SASRec
 
 当前模型：[`models/lr`](models/lr/README.md)
 
+LR 补充笔记：[`类别不平衡与正则化`](models/lr/IMBALANCE_AND_REGULARIZATION.md)
+
 ## 环境准备
 
 项目使用 Python 3.9+、PyTorch 和 [uv](https://docs.astral.sh/uv/)：
