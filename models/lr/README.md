@@ -47,19 +47,19 @@ user_sports × item_sports
 基础 LR：
 
 ```bash
-python -m models.lr.train
+uv run python -m models.lr.train
 ```
 
 加入人工交叉特征：
 
 ```bash
-python -m models.lr.train --include-cross
+uv run python -m models.lr.train --include-cross
 ```
 
 常用参数：
 
 ```bash
-python -m models.lr.train \
+uv run python -m models.lr.train \
   --samples 20000 \
   --epochs 40 \
   --batch-size 256 \
@@ -80,6 +80,42 @@ outputs/lr/with_cross/
 - `weights.json`：标准化特征空间中的权重与偏置；
 - `model.pt`：模型参数、特征名和标准化统计量。
 
+## 实验结果
+
+以下结果使用默认配置：20,000 条样本、40 个 Epoch、Batch Size 256、学习率 0.05、随机种子 42。
+
+| 指标 | 基础 LR | 加入交叉特征 | 变化 |
+| --- | ---: | ---: | ---: |
+| AUC | 0.738938 | 0.757314 | +0.018376 |
+| LogLoss | 0.292002 | 0.285596 | -0.006406 |
+| ECE | 0.014450 | 0.008108 | -0.006342 |
+| 预测 CTR | 10.5475% | 10.5094% | 更接近实际 CTR |
+| 实际 CTR | 10.3667% | 10.3667% | 不变 |
+
+基础 LR 的 Validation Loss 从 0.455192 降至 0.287810；加入交叉特征后从 0.420732 降至 0.281647。两组训练均正常收敛，Train Loss 与 Validation Loss 接近，没有明显过拟合。
+
+### 权重对比
+
+| 特征 | 基础 LR | 加入交叉特征 |
+| --- | ---: | ---: |
+| `user_sports` | +0.576785 | +0.202694 |
+| `item_sports` | +0.541536 | +0.118882 |
+| `price` | -0.440745 | -0.450973 |
+| `position` | -0.290694 | -0.305797 |
+| `is_evening` | +0.162284 | +0.165271 |
+| `sports_match` | — | +0.518141 |
+
+未提供交叉特征时，LR 只能把匹配带来的部分提升分摊给 `user_sports` 和 `item_sports`。加入 `sports_match` 后，两个一阶权重下降，匹配关系被单独建模；与此同时，AUC、LogLoss 和 ECE 均有改善。
+
+这些权重对应标准化后的输入空间，适合比较符号和实验间的变化，不应直接与数据生成器里的原始系数逐项比较。
+
+## 实验结论
+
+1. LR 能学习已有特征的一阶权重，但不会自动创造乘法交叉特征。
+2. 人工加入 `user_sports × item_sports` 后，模型的排序能力和概率质量同时提升。
+3. 价格、位置和晚间特征的权重方向符合数据生成规律。
+4. 这次对照实验说明了传统 LR 对人工特征工程的依赖，并为 FM 自动学习二阶特征交互提供了动机。
+
 ## 实验需要回答的问题
 
 1. Train Loss 和 Validation Loss 是否下降？
@@ -91,4 +127,4 @@ outputs/lr/with_cross/
 
 ## 下一步
 
-完成结果解读后，学习 AUC、LogLoss 和概率校准，再进入 FM。FM 将尝试通过隐向量自动学习二阶特征交互。
+逐段阅读训练循环，把 Batch、logits、BCE、反向传播、参数更新和评估指标与实际输出对应起来；随后进入 FM，让模型通过隐向量自动学习二阶特征交互，并与这组 LR 结果进行对照。

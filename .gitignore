@@ -5,5 +5,10 @@ __pycache__/
 .coverage
 .DS_Store
 
+# Python packaging artifacts
+*.egg-info/
+build/
+dist/
+
 outputs/*
 !outputs/.gitkeep

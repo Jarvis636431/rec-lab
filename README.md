@@ -12,22 +12,31 @@ LR → FM → DeepFM → DCN → Two Tower → DIN → ESMM → SASRec
 
 ## 环境准备
 
-项目使用 Python 3.9+ 和 PyTorch：
+项目使用 Python 3.9+、PyTorch 和 [uv](https://docs.astral.sh/uv/)：
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[dev]"
+uv sync --extra dev
 ```
+
+`uv sync` 根据 `pyproject.toml` 和 `uv.lock` 创建可复现的 `.venv`；`--extra dev` 同时安装 pytest。后续命令通过 `uv run` 自动使用该环境，无需手动激活。
 
 ## 运行第一个实验
 
 ```bash
-python -m models.lr.train
-python -m models.lr.train --include-cross
+uv run python -m models.lr.train
+uv run python -m models.lr.train --include-cross
 ```
 
 第一次实验不提供人工交叉特征，第二次加入 `user_sports × item_sports`，用于观察 LR 为什么依赖人工特征工程。
+
+默认参数（20,000 条样本、40 个 Epoch、随机种子 42）的结果：
+
+| 实验 | AUC | LogLoss | ECE |
+| --- | ---: | ---: | ---: |
+| 基础 LR | 0.738938 | 0.292002 | 0.014450 |
+| 加入人工交叉特征 | 0.757314 | 0.285596 | 0.008108 |
+
+加入匹配特征后，AUC 提升 0.018376，LogLoss 下降约 2.19%，ECE 下降约 43.9%。详细的实验设计、权重变化和结论见 [`models/lr/README.md`](models/lr/README.md)。
 
 ## 目录约定
 
@@ -35,7 +44,8 @@ python -m models.lr.train --include-cross
 rec-lab/
 ├── models/       # 每个模型一个独立学习单元
 ├── outputs/      # 模型、指标与实验产物，不提交 Git
-└── pyproject.toml
+├── pyproject.toml
+└── uv.lock       # uv 锁定的可复现依赖版本
 ```
 
 前三个模型完成前不提前封装通用 Trainer，确保数据、前向传播、损失、反向传播和参数更新在代码中清晰可见。
