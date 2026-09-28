@@ -77,6 +77,19 @@ uv run python -m models.lr.train --base-ctr 0.005
 
 配置了基础 CTR 的实验会写入独立目录，例如 `--base-ctr 0.005` 对应 `outputs/lr/baseline_base_ctr_0p005/`，不会覆盖原来的 `outputs/lr/baseline/`。
 
+本次低 CTR 实验得到：
+
+| 指标 | LR | 永远预测不点击 |
+| --- | ---: | ---: |
+| Accuracy | 0.992000 | 0.992000 |
+| Recall | 0 | 0 |
+| AUC | 0.782622 | 0.500000 |
+| PR-AUC | 0.047474 | 0.008000 |
+
+两者 Accuracy 相同，但 LR 已经学到有效排序。详细解释见 [类别不平衡与正则化补充笔记](IMBALANCE_AND_REGULARIZATION.md)。
+
+其中类别不平衡、指标选择、负采样和校准属于可复用于后续模型的搜广推基础；人工交叉特征和线性权重解释则是 LR 相关结论。补充笔记中单独整理了两类知识的边界。
+
 结果保存在：
 
 ```text
