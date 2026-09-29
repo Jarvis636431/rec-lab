@@ -5,10 +5,13 @@
 ## 学习路线
 
 ```text
-LR → FM → DeepFM → DCN → Two Tower → DIN → ESMM → SASRec
+LR → FM → DeepFM → DCN-v2 → Two Tower → DIN → ESMM → SASRec
+   → HSTU → TIGER / Semantic ID → 多模态与统一建模 → 腾讯竞赛演练
 ```
 
 当前模型：[`models/lr`](models/lr/README.md)
+
+完整学习与竞赛准备计划：[`ROADMAP.md`](ROADMAP.md)，暂按每周 10–12 小时，从当前 LR 阶段推进到 2027 年 4 月的参赛能力验收。
 
 LR 补充笔记：[`类别不平衡与正则化`](models/lr/IMBALANCE_AND_REGULARIZATION.md)
 
@@ -31,14 +34,20 @@ uv run python -m models.lr.train --include-cross
 
 第一次实验不提供人工交叉特征，第二次加入 `user_sports × item_sports`，用于观察 LR 为什么依赖人工特征工程。
 
-默认参数（20,000 条样本、40 个 Epoch、随机种子 42）的结果：
+默认参数（20,000 条样本、最多 40 个 Epoch、随机种子 42；恢复验证集最佳模型）的结果：
 
-| 实验 | AUC | LogLoss | ECE |
-| --- | ---: | ---: | ---: |
-| 基础 LR | 0.738938 | 0.292002 | 0.014450 |
+| 实验             |      AUC |  LogLoss |      ECE |
+| ---------------- | -------: | -------: | -------: |
+| 基础 LR          | 0.738985 | 0.291989 | 0.014614 |
 | 加入人工交叉特征 | 0.757314 | 0.285596 | 0.008108 |
 
-加入匹配特征后，AUC 提升 0.018376，LogLoss 下降约 2.19%，ECE 下降约 43.9%。详细的实验设计、权重变化和结论见 [`models/lr/README.md`](models/lr/README.md)。
+加入匹配特征后，AUC 提升 0.018329，LogLoss 下降约 2.19%，ECE 下降约 44.5%。详细的实验设计、权重变化和结论见 [`models/lr/README.md`](models/lr/README.md)。
+
+每次运行会在实验组下创建独立目录，保存配置与环境、每轮损失、最终指标和验证集最佳模型。使用 `--patience 5` 可开启提前停止；默认完成指定轮数后恢复最佳模型。基础测试命令：
+
+```bash
+uv run pytest -q
+```
 
 ## 目录约定
 

@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from models.lr.train import evaluate, evaluate_always_negative, experiment_name
 
@@ -34,3 +35,26 @@ def test_configured_experiments_do_not_overwrite_legacy_outputs() -> None:
         experiment_name(include_cross=False, base_ctr=0.005)
         == "baseline_base_ctr_0p005"
     )
+
+
+@pytest.mark.parametrize("label", [0, 1])
+def test_single_class_metrics_are_explicit_and_probability_metrics_still_work(label) -> None:
+    labels = np.full(15, label, dtype=np.float32)
+    probabilities = np.full(15, 0.01 if label == 0 else 0.99, dtype=np.float32)
+
+    metrics = evaluate(labels, probabilities)
+
+    assert metrics["auc"] is None
+    assert metrics["pr_auc"] is None
+    assert metrics["log_loss"] == pytest.approx(-np.log(0.99), abs=1e-6)
+    assert metrics["ece"] == pytest.approx(0.01, abs=1e-6)
+    assert metrics["accuracy"] == 1.0
+
+
+@pytest.mark.parametrize("probabilities", [
+    np.array([]), np.array([0.1]), np.array([np.nan, 0.1]),
+    np.array([0.1, 1.1]), np.array([0.1, -0.1]),
+])
+def test_invalid_predictions_are_rejected(probabilities) -> None:
+    with pytest.raises(ValueError):
+        evaluate(np.array([0, 1]), probabilities)

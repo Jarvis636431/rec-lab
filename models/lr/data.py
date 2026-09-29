@@ -18,7 +18,7 @@ CROSS_FEATURE = "sports_match"
 
 @dataclass(frozen=True)
 class DataSplit:
-    """Time-ordered train, validation, and test arrays."""
+    """Sequential train, validation, and test arrays from synthetic IID data."""
 
     train_x: np.ndarray
     train_y: np.ndarray
@@ -41,7 +41,7 @@ def generate_exposures(
     seed: int,
     base_ctr: Optional[float] = None,
 ) -> Dict[str, np.ndarray]:
-    """Generate chronological impressions from a known click process."""
+    """Generate IID impressions from a known click process, without time drift."""
 
     if samples < 100:
         raise ValueError("samples must be at least 100")
@@ -98,7 +98,7 @@ def prepare_data(
     include_cross: bool = False,
     base_ctr: Optional[float] = None,
 ) -> DataSplit:
-    """Generate, time-split, and standardize features without leakage."""
+    """Generate, sequentially split, and standardize without leakage."""
 
     exposures = generate_exposures(
         samples=samples,
