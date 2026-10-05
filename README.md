@@ -9,9 +9,9 @@ LR → FM → DeepFM → DCN-v2 → Two Tower → DIN → ESMM → SASRec
    → HSTU → TIGER / Semantic ID → 多模态与统一建模 → 腾讯竞赛演练
 ```
 
-当前模型：[`models/lr`](models/lr/README.md)
+已完成模型：[`LR`](models/lr/README.md)、[`FM`](models/fm/README.md)。FM 与基础 LR、人工交叉 LR 的同数据三 seed 对照见 [FM 实验记录](models/fm/README.md)。
 
-完整学习与竞赛准备计划：[`ROADMAP.md`](ROADMAP.md)，暂按每周 10–12 小时，从当前 LR 阶段推进到 2027 年 4 月的参赛能力验收。
+完整学习与竞赛准备计划：[`ROADMAP.md`](ROADMAP.md)，暂按每周 10–12 小时推进到 2027 年 4 月的参赛能力验收。
 
 LR 补充笔记：[`类别不平衡与正则化`](models/lr/IMBALANCE_AND_REGULARIZATION.md)
 
@@ -30,9 +30,12 @@ uv sync --extra dev
 ```bash
 uv run python -m models.lr.train
 uv run python -m models.lr.train --include-cross
+uv run python -m models.fm.train --embedding-dim 16
 ```
 
 第一次实验不提供人工交叉特征，第二次加入 `user_sports × item_sports`，用于观察 LR 为什么依赖人工特征工程。
+
+FM 仍只接收原始五列特征，通过二阶隐向量学习交互。它与两组 LR 的三个 seed 对照和完整复现命令见 [`models/fm/README.md`](models/fm/README.md)。
 
 默认参数（20,000 条样本、最多 40 个 Epoch、随机种子 42；恢复验证集最佳模型）的结果：
 
