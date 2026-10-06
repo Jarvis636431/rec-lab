@@ -1,12 +1,12 @@
 # Rec Lab ROADMAP：从 LR 到生成式推荐与腾讯算法竞赛
 
-更新日期：2026-10-06。目标日期：**2027 年 4 月下旬**。原始需求中的“20274 月”暂按 2027 年 4 月解释。
+更新日期：2026-10-07。目标日期：**2027 年 4 月下旬**。原始需求中的“20274 月”暂按 2027 年 4 月解释。
 
 这份计划的终点是：能够独立读懂推荐赛题、建立可信的验证集、复现官方基线、完成有证据的改进并交付可运行的提交包。生成式推荐是学习主线之一；实际参赛模型由赛题、指标和资源约束决定。达到参赛能力不等于保证名次，也不等于比赛届时一定开放报名。
 
 ## 1. 当前起点与时间预算
 
-当前已实现 LR、人工交叉特征对照、低 CTR 准确率陷阱，以及 AUC / Average Precision / LogLoss / ECE。LR 工程补齐包括独立运行目录、配置和环境记录、每轮损失、验证集最佳模型恢复、可选 Early Stopping、单类别测试集处理与 checkpoint 重载验证。FM 已实现高效二阶项，并完成与两组 LR 在三个 seed 上的同数据对照，详见 [`models/fm/README.md`](models/fm/README.md)。另已完成多字段稀疏模拟数据与 LR/FM/MLP 三组基线，详见 [`models/sparse_ctr/README.md`](models/sparse_ctr/README.md)。
+当前已实现 LR、人工交叉特征对照、低 CTR 准确率陷阱，以及 AUC / Average Precision / LogLoss / ECE。LR 工程补齐包括独立运行目录、配置和环境记录、每轮损失、验证集最佳模型恢复、可选 Early Stopping、单类别测试集处理与 checkpoint 重载验证。FM 已实现高效二阶项，并完成与两组 LR 在三个 seed 上的同数据对照，详见 [`models/fm/README.md`](models/fm/README.md)。多字段稀疏模拟数据上的 LR/FM/MLP 基线和 DeepFM 分支消融也已完成，详见 [`models/sparse_ctr/README.md`](models/sparse_ctr/README.md) 与 [`models/deepfm/README.md`](models/deepfm/README.md)。
 
 当前数据仍为模拟 IID 曝光，按生成顺序切分：第一套只有五个基础特征；第二套加入长尾用户/物品 ID、类别字段和训练集词表。它们适合解释模型原理与稀疏输入协议，但没有真实时间漂移、多模态信息和用户历史序列。
 
@@ -192,7 +192,7 @@ TIGER 拆成三个验收点：
 | 检查点 | 计划结果 | 实际结果 / 下一步 |
 | --- | --- | --- |
 | 2026-10-04 | LR 工程收尾 | 已实现记录、选模、边界处理；个人阅读验收待完成 |
-| 2026-11-01 | FM 与 DeepFM | FM、稀疏字段和 LR/FM/MLP 三 seed 基线已完成；下一步是 DeepFM 与消融 |
+| 2026-11-01 | FM 与 DeepFM | FM、稀疏字段、LR/FM/MLP 基线与 DeepFM 三 seed 消融已完成；下一步是 DCN-v2 与正则化 |
 | 2026-11-29 | DCN-v2 与双塔 | 待完成 |
 | 2026-12-27 | DIN / ESMM、阶段复盘 | 待完成 |
 | 2027-01-17 | SASRec 与可信序列评估 | 待完成 |

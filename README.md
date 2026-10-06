@@ -9,9 +9,9 @@ LR → FM → 稀疏字段与 MLP 对照 → DeepFM → DCN-v2 → Two Tower →
    → HSTU → TIGER / Semantic ID → 多模态与统一建模 → 腾讯竞赛演练
 ```
 
-已完成模型：[`LR`](models/lr/README.md)、[`FM`](models/fm/README.md)。FM 与基础 LR、人工交叉 LR 的同数据三 seed 对照见 [FM 实验记录](models/fm/README.md)。
+已完成模型：[`LR`](models/lr/README.md)、[`FM`](models/fm/README.md)、[`DeepFM`](models/deepfm/README.md)。FM 与基础 LR、人工交叉 LR 的同数据三 seed 对照见 [FM 实验记录](models/fm/README.md)。
 
-多字段稀疏模拟数据上的 [`LR / FM / MLP 对照`](models/sparse_ctr/README.md)已完成，作为后续 DeepFM 的独立基线。
+多字段稀疏模拟数据上的 [`LR / FM / MLP 对照`](models/sparse_ctr/README.md)和 [`DeepFM 分支消融`](models/deepfm/README.md)已完成；当前合成数据上完整 DeepFM 未稳定超过仅 FM 分支。
 
 完整学习与竞赛准备计划：[`ROADMAP.md`](ROADMAP.md)，暂按每周 10–12 小时推进到 2027 年 4 月的参赛能力验收。
 
@@ -36,6 +36,7 @@ uv run python -m models.lr.train
 uv run python -m models.lr.train --include-cross
 uv run python -m models.fm.train --embedding-dim 16
 uv run python -m models.sparse_ctr.train --model fm
+uv run python -m models.deepfm.train --variant deepfm
 ```
 
 第一次实验不提供人工交叉特征，第二次加入 `user_sports × item_sports`，用于观察 LR 为什么依赖人工特征工程。
