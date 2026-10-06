@@ -1,5 +1,7 @@
 # 02 · Factorization Machine CTR 实验
 
+原论文 PDF 与阅读笔记见 [`papers/fm`](../../papers/fm/README.md)。
+
 ## 问题与模型
 
 LR 只能给输入特征分配一阶权重。这里保持原有的五列输入，**不提供**人工构造的 `sports_match = user_sports × item_sports`，检验 FM 能否通过可学习的二阶项捕捉交互。

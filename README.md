@@ -15,6 +15,8 @@ LR → FM → DeepFM → DCN-v2 → Two Tower → DIN → ESMM → SASRec
 
 LR 补充笔记：[`类别不平衡与正则化`](models/lr/IMBALANCE_AND_REGULARIZATION.md)
 
+论文原文与阅读笔记：[`papers/`](papers/README.md)，涵盖 FM、DeepFM、DIN、SASRec、HSTU、TIGER 和 OneRec。
+
 ## 环境准备
 
 项目使用 Python 3.9+、PyTorch 和 [uv](https://docs.astral.sh/uv/)：
